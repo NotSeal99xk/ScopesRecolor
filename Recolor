@@ -1,3 +1,4 @@
+
 -- NOTSEAL SCOPE MENU
 -- Local only | MM2
 
@@ -7,223 +8,295 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 -- DESIGNS
--- Puedes agregar BeamTexture y/o TrailTexture ("rbxassetid://...") en cualquier diseño.
--- Si no se definen (o quedan vacíos/nil), se conserva la textura original del objeto.
 
 local DESIGNS = {
-["ROSESCOPE"] = {
-Texture = "rbxassetid://109232785673400",
-Color = Color3.fromRGB(255, 182, 193),
-BeamTexture = nil,
-TrailTexture = nil
-},
+    ["ROSESCOPE"] = {
+        Texture = "rbxassetid://109232785673400",
+        Color = Color3.fromRGB(255, 182, 193),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
 
-["CYANSCOPE"] = {  
-    Texture = "rbxassetid://120031867841417",  
-    Color = Color3.fromRGB(135, 206, 250),  
-    BeamTexture = nil,  
-    TrailTexture = nil  
-},  
+    ["CYANSCOPE"] = {
+        Texture = "rbxassetid://120031867841417",
+        Color = Color3.fromRGB(135, 206, 250),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
 
-["CHIIKAWA SCOPE"] = {  
-    Texture = "rbxassetid://133755750227495",  
-    Color = Color3.fromRGB(255, 250, 180),  
-    BeamTexture = nil,  
-    TrailTexture = nil  
-},  
+    ["CHIIKAWA SCOPE"] = {
+        Texture = "rbxassetid://133755750227495",
+        Color = Color3.fromRGB(255, 250, 180),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
 
-["SEALSCOPE"] = {  
-    Texture = "rbxassetid://77310924197874",  
-    Color = Color3.fromRGB(255, 255, 255),  
-    BeamTexture = nil,  
-    TrailTexture = nil  
-},  
+    ["SEALSCOPE"] = {
+        Texture = "rbxassetid://77310924197874",
+        Color = Color3.fromRGB(255, 255, 255),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
 
-["CINNAMOROL SCOPE"] = {  
-    Texture = "rbxassetid://126368120695023",  
-    Color = Color3.fromRGB(173, 216, 255),  
-    BeamTexture = nil,  
-    TrailTexture = nil  
-},  
+    ["CINNAMOROL SCOPE"] = {
+        Texture = "rbxassetid://126368120695023",
+        Color = Color3.fromRGB(173, 216, 255),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
 
-["KITTYSCOPE"] = {  
-    Texture = "rbxassetid://79617542261475",  
-    Color = Color3.fromRGB(255, 190, 210),  
-    BeamTexture = nil,  
-    TrailTexture = nil  
-},  
+    ["KITTYSCOPE"] = {
+        Texture = "rbxassetid://79617542261475",
+        Color = Color3.fromRGB(255, 190, 210),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
 
-["YUMEKOSCOPE"] = {  
-    Texture = "rbxassetid://115478117723404",  
-    Color = Color3.fromRGB(255, 0, 0),  
-    BeamTexture = nil,  
-    TrailTexture = nil  
-}
+    ["YUMEKOSCOPE"] = {
+        Texture = "rbxassetid://115478117723404",
+        Color = Color3.fromRGB(255, 0, 0),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
 
+    ["GINGERBREAD SCOPE"] = {
+        Texture = "rbxassetid://131697622267133",
+        Color = Color3.fromRGB(255, 145, 40),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
+
+    ["KUROMISCOPE"] = {
+        Texture = "rbxassetid://75047836866332",
+        Color = Color3.fromRGB(200, 170, 235),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
+
+    ["PUSHEENSCOPE"] = {
+        Texture = "rbxassetid://87998483455762",
+        Color = Color3.fromRGB(255, 255, 255),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
+
+    ["POMPOMPURIN SCOPE"] = {
+        Texture = "rbxassetid://70911625583625",
+        Color = Color3.fromRGB(255, 230, 140),
+        BeamTexture = nil,
+        TrailTexture = nil
+    },
+
+    ["KANISCOPE"] = {
+        Texture = "rbxassetid://109889365749570",
+        Color = Color3.fromRGB(255, 190, 205),
+        BeamTexture = nil,
+        TrailTexture = nil
+    }
 }
 
 local selectedDesign = "CYANSCOPE"
 
--- RESPUALDO DE TEXTURAS ORIGINALES (BEAM & TRAIL)
+-- ORIGINAL PROPERTY CACHE
 
-local originalEffectTextures = setmetatable({}, { __mode = "k" })
+local originalScopeProperties = setmetatable({}, {__mode = "k"})
+local originalEffectProperties = setmetatable({}, {__mode = "k"})
 
-local function cacheOriginalTexture(effect)
-if originalEffectTextures[effect] == nil then
-originalEffectTextures[effect] = effect.Texture
+local function cacheScopeProperty(object, property)
+    if not originalScopeProperties[object] then
+        originalScopeProperties[object] = {}
+    end
+
+    if originalScopeProperties[object][property] == nil then
+        originalScopeProperties[object][property] = object[property]
+    end
 end
+
+local function cacheEffectProperties(object)
+    if originalEffectProperties[object] then return end
+
+    originalEffectProperties[object] = {
+        Texture = object.Texture,
+        Color = object.Color
+    }
 end
 
--- TEXTURE SYSTEM (MESH / DECAL / TEXTURE)
+-- TEXTURE SYSTEM
 
 local function updateTextures(root)
-local design = DESIGNS[selectedDesign]
-if not design or not root then return end
+    local design = selectedDesign and DESIGNS[selectedDesign]
+    if not design or not root then return end
 
-local texture = design.Texture  
+    local texture = design.Texture
 
-local function update(object)  
-    if object:IsA("MeshPart") then  
-        object.TextureID = texture  
-    elseif object:IsA("SpecialMesh") then  
-        object.TextureId = texture  
-    elseif object:IsA("Decal") or object:IsA("Texture") then  
-        object.Texture = texture  
-    end  
-end  
+    local function update(object)
+        if object:IsA("MeshPart") then
+            cacheScopeProperty(object, "TextureID")
+            object.TextureID = texture
 
-update(root)  
+        elseif object:IsA("SpecialMesh") then
+            cacheScopeProperty(object, "TextureId")
+            object.TextureId = texture
 
-for _, object in ipairs(root:GetDescendants()) do  
-    update(object)  
-end
+        elseif object:IsA("Decal") or object:IsA("Texture") then
+            cacheScopeProperty(object, "Texture")
+            object.Texture = texture
+        end
+    end
 
+    update(root)
+
+    for _, object in ipairs(root:GetDescendants()) do
+        update(object)
+    end
 end
 
 -- BEAM AND TRAIL SYSTEM
 
 local function applyBeamAndTrailToObject(object, design)
-if not design or not object then return end
+    if not object then return end
 
-if object:IsA("Beam") then  
-    cacheOriginalTexture(object)  
+    if not object:IsA("Beam") and not object:IsA("Trail") then
+        return
+    end
 
-    if design.Color then  
-        object.Color = ColorSequence.new(design.Color)  
-    end  
+    cacheEffectProperties(object)
 
-    if type(design.BeamTexture) == "string" and design.BeamTexture ~= "" then  
-        object.Texture = design.BeamTexture  
-    elseif originalEffectTextures[object] ~= nil then  
-        object.Texture = originalEffectTextures[object]  
-    end  
+    local original = originalEffectProperties[object]
 
-elseif object:IsA("Trail") then  
-    cacheOriginalTexture(object)  
+    if not design then
+        object.Texture = original.Texture
+        object.Color = original.Color
+        return
+    end
 
-    if design.Color then  
-        object.Color = ColorSequence.new(design.Color)  
-    end  
+    if design.Color then
+        object.Color = ColorSequence.new(design.Color)
+    else
+        object.Color = original.Color
+    end
 
-    if type(design.TrailTexture) == "string" and design.TrailTexture ~= "" then  
-        object.Texture = design.TrailTexture  
-    elseif originalEffectTextures[object] ~= nil then  
-        object.Texture = originalEffectTextures[object]  
-    end  
-end
+    local texture
 
+    if object:IsA("Beam") then
+        texture = design.BeamTexture
+    else
+        texture = design.TrailTexture
+    end
+
+    if type(texture) == "string" and texture ~= "" then
+        object.Texture = texture
+    else
+        object.Texture = original.Texture
+    end
 end
 
 local function applyBeamColor(root)
-local design = DESIGNS[selectedDesign]
-if not design or not root then return end
+    local design = selectedDesign and DESIGNS[selectedDesign]
+    if not root then return end
 
-applyBeamAndTrailToObject(root, design)  
+    applyBeamAndTrailToObject(root, design)
 
-for _, object in ipairs(root:GetDescendants()) do  
-    applyBeamAndTrailToObject(object, design)  
-end
-
+    for _, object in ipairs(root:GetDescendants()) do
+        applyBeamAndTrailToObject(object, design)
+    end
 end
 
 -- GUN DISPLAY
 
 local function getObjectPosition(object)
-if object:IsA("BasePart") then
-return object.Position
-elseif object:IsA("Model") then
-return object:GetPivot().Position
-end
+    if object:IsA("BasePart") then
+        return object.Position
+    elseif object:IsA("Model") then
+        return object:GetPivot().Position
+    end
 
-local part = object:FindFirstChildWhichIsA("BasePart", true)  
-return part and part.Position
-
+    local part = object:FindFirstChildWhichIsA("BasePart", true)
+    return part and part.Position
 end
 
 local function findNearestGunDisplay()
-local character = player.Character
-local root = character and character:FindFirstChild("HumanoidRootPart")
+    local character = player.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
 
-if not root then return nil end  
+    if not root then return nil end
 
-local nearest  
-local nearestDistance = math.huge  
+    local nearest
+    local nearestDistance = math.huge
 
-for _, object in ipairs(workspace:GetDescendants()) do  
-    if object.Name == "GunDisplay" then  
-        local position = getObjectPosition(object)  
+    for _, object in ipairs(workspace:GetDescendants()) do
+        if object.Name == "GunDisplay" then
+            local position = getObjectPosition(object)
 
-        if position then  
-            local distance = (position - root.Position).Magnitude  
+            if position then
+                local distance = (position - root.Position).Magnitude
 
-            if distance < nearestDistance then  
-                nearest = object  
-                nearestDistance = distance  
-            end  
-        end  
-    end  
-end  
+                if distance < nearestDistance then
+                    nearest = object
+                    nearestDistance = distance
+                end
+            end
+        end
+    end
 
-return nearest
-
+    return nearest
 end
 
 local function applyScope()
-local display = findNearestGunDisplay()
+    local display = findNearestGunDisplay()
 
-if display then  
-    updateTextures(display)  
-    applyBeamColor(display)  
-end
-
+    if display then
+        updateTextures(display)
+        applyBeamColor(display)
+    end
 end
 
 -- GUN TOOL & CHARACTER
 
 local function applyGunEffects()
-local character = player.Character
-local backpack = player:FindFirstChildOfClass("Backpack")
+    local character = player.Character
+    local backpack = player:FindFirstChildOfClass("Backpack")
 
-if character then  
-    applyBeamColor(character)  
-end  
+    if character then
+        applyBeamColor(character)
+    end
 
-for _, container in ipairs({character, backpack}) do  
-    if container then  
-        for _, tool in ipairs(container:GetChildren()) do  
-            if tool:IsA("Tool") and tool.Name == "Gun" then  
-                updateTextures(tool)  
-                applyBeamColor(tool)  
-            end  
-        end  
-    end  
-end
-
+    for _, container in ipairs({character, backpack}) do
+        if container then
+            for _, tool in ipairs(container:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name == "Gun" then
+                    updateTextures(tool)
+                    applyBeamColor(tool)
+                end
+            end
+        end
+    end
 end
 
 local function applyAll()
-applyScope()
-applyGunEffects()
+    if not selectedDesign then return end
+
+    applyScope()
+    applyGunEffects()
+end
+
+-- RESET SYSTEM
+
+local function restoreOriginalTextures()
+    for object, properties in pairs(originalScopeProperties) do
+        if object and object.Parent then
+            for property, value in pairs(properties) do
+                object[property] = value
+            end
+        end
+    end
+
+    for object, properties in pairs(originalEffectProperties) do
+        if object and object.Parent then
+            object.Texture = properties.Texture
+            object.Color = properties.Color
+        end
+    end
 end
 
 -- GUI
@@ -362,112 +435,137 @@ status.Parent = main
 
 local designButtons = {}
 
+local function updateButtonColors()
+    for designName, designButton in pairs(designButtons) do
+        designButton.BackgroundColor3 =
+            designName == selectedDesign
+            and Color3.fromRGB(75, 125, 170)
+            or Color3.fromRGB(39, 53, 76)
+    end
+end
+
 local function createDesignButton(name, order)
-local button = Instance.new("TextButton")
-button.Name = name
-button.Size = UDim2.new(1, -6, 0, 32)
-button.BackgroundColor3 = Color3.fromRGB(39, 53, 76)
-button.Text = name
-button.TextColor3 = Color3.fromRGB(225, 240, 255)
-button.TextSize = 11
-button.Font = Enum.Font.GothamBold
-button.LayoutOrder = order
-button.Parent = scroll
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Size = UDim2.new(1, -6, 0, 32)
+    button.BackgroundColor3 = Color3.fromRGB(39, 53, 76)
+    button.Text = name
+    button.TextColor3 = Color3.fromRGB(225, 240, 255)
+    button.TextSize = 11
+    button.Font = Enum.Font.GothamBold
+    button.LayoutOrder = order
+    button.Parent = scroll
 
-local buttonCorner = Instance.new("UICorner")  
-buttonCorner.CornerRadius = UDim.new(0, 7)  
-buttonCorner.Parent = button  
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 7)
+    buttonCorner.Parent = button
 
-designButtons[name] = button  
+    designButtons[name] = button
 
-button.MouseButton1Click:Connect(function()  
-    selectedDesign = name  
+    button.MouseButton1Click:Connect(function()
+        selectedDesign = name
 
-    applyAll()  
+        applyAll()
 
-    status.Text = "Selected: " .. selectedDesign  
-
-    for designName, designButton in pairs(designButtons) do  
-        designButton.BackgroundColor3 =  
-            designName == selectedDesign  
-            and Color3.fromRGB(75, 125, 170)  
-            or Color3.fromRGB(39, 53, 76)  
-    end  
-end)
-
+        status.Text = "Selected: " .. selectedDesign
+        updateButtonColors()
+    end)
 end
 
 local order = 0
 
 for name in pairs(DESIGNS) do
-order += 1
-createDesignButton(name, order)
+    order += 1
+    createDesignButton(name, order)
 end
 
--- SET INITIAL SELECTION
+-- RESET BUTTON
 
-if designButtons[selectedDesign] then
-designButtons[selectedDesign].BackgroundColor3 = Color3.fromRGB(75, 125, 170)
-end
+local resetButton = Instance.new("TextButton")
+resetButton.Name = "Reset"
+resetButton.Size = UDim2.new(1, -6, 0, 32)
+resetButton.BackgroundColor3 = Color3.fromRGB(80, 55, 65)
+resetButton.Text = "RESET"
+resetButton.TextColor3 = Color3.fromRGB(255, 220, 225)
+resetButton.TextSize = 11
+resetButton.Font = Enum.Font.GothamBold
+resetButton.LayoutOrder = 100
+resetButton.Parent = scroll
+
+local resetCorner = Instance.new("UICorner")
+resetCorner.CornerRadius = UDim.new(0, 7)
+resetCorner.Parent = resetButton
+
+resetButton.MouseButton1Click:Connect(function()
+    selectedDesign = nil
+
+    restoreOriginalTextures()
+
+    status.Text = "Selected: RESET"
+    updateButtonColors()
+end)
+
+-- INITIAL SELECTION
+
+updateButtonColors()
 
 -- MINIMIZE / RESTORE
 
 local function setMinimized(value)
-main.Visible = not value
-floating.Visible = value
+    main.Visible = not value
+    floating.Visible = value
 end
 
 minimize.MouseButton1Click:Connect(function()
-setMinimized(true)
+    setMinimized(true)
 end)
 
 floating.MouseButton1Click:Connect(function()
-setMinimized(false)
+    setMinimized(false)
 end)
 
 -- DRAG SYSTEM
 
 local function makeDraggable(handle, target)
-local dragging = false
-local dragStart
-local startPosition
-local dragInput
+    local dragging = false
+    local dragStart
+    local startPosition
+    local dragInput
 
-handle.InputBegan:Connect(function(input)  
-    if input.UserInputType == Enum.UserInputType.MouseButton1  
-        or input.UserInputType == Enum.UserInputType.Touch then  
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
 
-        dragging = true  
-        dragStart = input.Position  
-        startPosition = target.Position  
-        dragInput = input  
-    end  
-end)  
+            dragging = true
+            dragStart = input.Position
+            startPosition = target.Position
+            dragInput = input
+        end
+    end)
 
-UserInputService.InputChanged:Connect(function(input)  
-    if dragging and (  
-        input.UserInputType == Enum.UserInputType.MouseMovement  
-        or input.UserInputType == Enum.UserInputType.Touch  
-    ) then  
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
 
-        local delta = input.Position - dragStart  
+            local delta = input.Position - dragStart
 
-        target.Position = UDim2.new(  
-            startPosition.X.Scale,  
-            startPosition.X.Offset + delta.X,  
-            startPosition.Y.Scale,  
-            startPosition.Y.Offset + delta.Y  
-        )  
-    end  
-end)  
+            target.Position = UDim2.new(
+                startPosition.X.Scale,
+                startPosition.X.Offset + delta.X,
+                startPosition.Y.Scale,
+                startPosition.Y.Offset + delta.Y
+            )
+        end
+    end)
 
-UserInputService.InputEnded:Connect(function(input)  
-    if input == dragInput  
-        or input.UserInputType == Enum.UserInputType.MouseButton1 then  
-        dragging = false  
-    end  
-end)
-
+    UserInputService.InputEnded:Connect(function(input)
+        if input == dragInput
+            or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
 end
 
 makeDraggable(top, main)
@@ -476,55 +574,74 @@ makeDraggable(floating, floating)
 -- WATCH TOOLS & EFFECTS
 
 local function watchContainer(container)
-container.ChildAdded:Connect(function(object)
-if object:IsA("Tool") and object.Name == "Gun" then
-task.wait(0.2)
-updateTextures(object)
-applyBeamColor(object)
-elseif object:IsA("Beam") or object:IsA("Trail") then
-applyBeamAndTrailToObject(object, DESIGNS[selectedDesign])
-end
-end)
+    container.ChildAdded:Connect(function(object)
+        if object:IsA("Tool") and object.Name == "Gun" then
+            task.wait(0.2)
 
-container.DescendantAdded:Connect(function(object)  
-    if object:IsA("Beam") or object:IsA("Trail") then  
-        applyBeamAndTrailToObject(object, DESIGNS[selectedDesign])  
-    end  
-end)
+            if selectedDesign then
+                updateTextures(object)
+                applyBeamColor(object)
+            end
 
+        elseif object:IsA("Beam") or object:IsA("Trail") then
+            applyBeamAndTrailToObject(
+                object,
+                selectedDesign and DESIGNS[selectedDesign]
+            )
+        end
+    end)
+
+    container.DescendantAdded:Connect(function(object)
+        if object:IsA("Beam") or object:IsA("Trail") then
+            applyBeamAndTrailToObject(
+                object,
+                selectedDesign and DESIGNS[selectedDesign]
+            )
+        end
+    end)
 end
 
 local backpack = player:WaitForChild("Backpack")
 watchContainer(backpack)
 
 player.CharacterAdded:Connect(function(character)
-watchContainer(character)
-task.wait(0.5)
-applyAll()
+    watchContainer(character)
+    task.wait(0.5)
+    applyAll()
 end)
 
 if player.Character then
-watchContainer(player.Character)
+    watchContainer(player.Character)
 end
 
 -- WATCH GUN DISPLAY & WORKSPACE BEAMS/TRAILS
 
 workspace.DescendantAdded:Connect(function(object)
-if object.Name == "GunDisplay" then
-task.wait(0.2)
-applyScope()
-elseif object:IsA("Beam") or object:IsA("Trail") then
-local char = player.Character
-local hrp = char and char:FindFirstChild("HumanoidRootPart")
-if char and object:IsDescendantOf(char) then
-applyBeamAndTrailToObject(object, DESIGNS[selectedDesign])
-elseif hrp then
-local pos = getObjectPosition(object)
-if pos and (pos - hrp.Position).Magnitude <= 35 then
-applyBeamAndTrailToObject(object, DESIGNS[selectedDesign])
-end
-end
-end
+    if object.Name == "GunDisplay" then
+        task.wait(0.2)
+        applyScope()
+
+    elseif object:IsA("Beam") or object:IsA("Trail") then
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+        if char and object:IsDescendantOf(char) then
+            applyBeamAndTrailToObject(
+                object,
+                selectedDesign and DESIGNS[selectedDesign]
+            )
+
+        elseif hrp then
+            local pos = getObjectPosition(object)
+
+            if pos and (pos - hrp.Position).Magnitude <= 35 then
+                applyBeamAndTrailToObject(
+                    object,
+                    selectedDesign and DESIGNS[selectedDesign]
+                )
+            end
+        end
+    end
 end)
 
 -- LOAD
