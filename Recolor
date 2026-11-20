@@ -1,0 +1,534 @@
+-- NOTSEAL SCOPE MENU
+-- Local only | MM2
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+-- DESIGNS
+-- Puedes agregar BeamTexture y/o TrailTexture ("rbxassetid://...") en cualquier diseño.
+-- Si no se definen (o quedan vacíos/nil), se conserva la textura original del objeto.
+
+local DESIGNS = {
+["ROSESCOPE"] = {
+Texture = "rbxassetid://109232785673400",
+Color = Color3.fromRGB(255, 182, 193),
+BeamTexture = nil,
+TrailTexture = nil
+},
+
+["CYANSCOPE"] = {  
+    Texture = "rbxassetid://120031867841417",  
+    Color = Color3.fromRGB(135, 206, 250),  
+    BeamTexture = nil,  
+    TrailTexture = nil  
+},  
+
+["CHIIKAWA SCOPE"] = {  
+    Texture = "rbxassetid://133755750227495",  
+    Color = Color3.fromRGB(255, 250, 180),  
+    BeamTexture = nil,  
+    TrailTexture = nil  
+},  
+
+["SEALSCOPE"] = {  
+    Texture = "rbxassetid://77310924197874",  
+    Color = Color3.fromRGB(255, 255, 255),  
+    BeamTexture = nil,  
+    TrailTexture = nil  
+},  
+
+["CINNAMOROL SCOPE"] = {  
+    Texture = "rbxassetid://126368120695023",  
+    Color = Color3.fromRGB(173, 216, 255),  
+    BeamTexture = nil,  
+    TrailTexture = nil  
+},  
+
+["KITTYSCOPE"] = {  
+    Texture = "rbxassetid://79617542261475",  
+    Color = Color3.fromRGB(255, 190, 210),  
+    BeamTexture = nil,  
+    TrailTexture = nil  
+},  
+
+["YUMEKOSCOPE"] = {  
+    Texture = "rbxassetid://115478117723404",  
+    Color = Color3.fromRGB(255, 0, 0),  
+    BeamTexture = nil,  
+    TrailTexture = nil  
+}
+
+}
+
+local selectedDesign = "CYANSCOPE"
+
+-- RESPUALDO DE TEXTURAS ORIGINALES (BEAM & TRAIL)
+
+local originalEffectTextures = setmetatable({}, { __mode = "k" })
+
+local function cacheOriginalTexture(effect)
+if originalEffectTextures[effect] == nil then
+originalEffectTextures[effect] = effect.Texture
+end
+end
+
+-- TEXTURE SYSTEM (MESH / DECAL / TEXTURE)
+
+local function updateTextures(root)
+local design = DESIGNS[selectedDesign]
+if not design or not root then return end
+
+local texture = design.Texture  
+
+local function update(object)  
+    if object:IsA("MeshPart") then  
+        object.TextureID = texture  
+    elseif object:IsA("SpecialMesh") then  
+        object.TextureId = texture  
+    elseif object:IsA("Decal") or object:IsA("Texture") then  
+        object.Texture = texture  
+    end  
+end  
+
+update(root)  
+
+for _, object in ipairs(root:GetDescendants()) do  
+    update(object)  
+end
+
+end
+
+-- BEAM AND TRAIL SYSTEM
+
+local function applyBeamAndTrailToObject(object, design)
+if not design or not object then return end
+
+if object:IsA("Beam") then  
+    cacheOriginalTexture(object)  
+
+    if design.Color then  
+        object.Color = ColorSequence.new(design.Color)  
+    end  
+
+    if type(design.BeamTexture) == "string" and design.BeamTexture ~= "" then  
+        object.Texture = design.BeamTexture  
+    elseif originalEffectTextures[object] ~= nil then  
+        object.Texture = originalEffectTextures[object]  
+    end  
+
+elseif object:IsA("Trail") then  
+    cacheOriginalTexture(object)  
+
+    if design.Color then  
+        object.Color = ColorSequence.new(design.Color)  
+    end  
+
+    if type(design.TrailTexture) == "string" and design.TrailTexture ~= "" then  
+        object.Texture = design.TrailTexture  
+    elseif originalEffectTextures[object] ~= nil then  
+        object.Texture = originalEffectTextures[object]  
+    end  
+end
+
+end
+
+local function applyBeamColor(root)
+local design = DESIGNS[selectedDesign]
+if not design or not root then return end
+
+applyBeamAndTrailToObject(root, design)  
+
+for _, object in ipairs(root:GetDescendants()) do  
+    applyBeamAndTrailToObject(object, design)  
+end
+
+end
+
+-- GUN DISPLAY
+
+local function getObjectPosition(object)
+if object:IsA("BasePart") then
+return object.Position
+elseif object:IsA("Model") then
+return object:GetPivot().Position
+end
+
+local part = object:FindFirstChildWhichIsA("BasePart", true)  
+return part and part.Position
+
+end
+
+local function findNearestGunDisplay()
+local character = player.Character
+local root = character and character:FindFirstChild("HumanoidRootPart")
+
+if not root then return nil end  
+
+local nearest  
+local nearestDistance = math.huge  
+
+for _, object in ipairs(workspace:GetDescendants()) do  
+    if object.Name == "GunDisplay" then  
+        local position = getObjectPosition(object)  
+
+        if position then  
+            local distance = (position - root.Position).Magnitude  
+
+            if distance < nearestDistance then  
+                nearest = object  
+                nearestDistance = distance  
+            end  
+        end  
+    end  
+end  
+
+return nearest
+
+end
+
+local function applyScope()
+local display = findNearestGunDisplay()
+
+if display then  
+    updateTextures(display)  
+    applyBeamColor(display)  
+end
+
+end
+
+-- GUN TOOL & CHARACTER
+
+local function applyGunEffects()
+local character = player.Character
+local backpack = player:FindFirstChildOfClass("Backpack")
+
+if character then  
+    applyBeamColor(character)  
+end  
+
+for _, container in ipairs({character, backpack}) do  
+    if container then  
+        for _, tool in ipairs(container:GetChildren()) do  
+            if tool:IsA("Tool") and tool.Name == "Gun" then  
+                updateTextures(tool)  
+                applyBeamColor(tool)  
+            end  
+        end  
+    end  
+end
+
+end
+
+local function applyAll()
+applyScope()
+applyGunEffects()
+end
+
+-- GUI
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "NotSealScopeMenu"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- MAIN FRAME
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.fromOffset(235, 290)
+main.Position = UDim2.new(0.5, -117, 0.5, -145)
+main.BackgroundColor3 = Color3.fromRGB(20, 25, 39)
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = main
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(135, 206, 250)
+stroke.Thickness = 1.5
+stroke.Parent = main
+
+-- HEADER
+
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1, 0, 0, 38)
+top.BackgroundColor3 = Color3.fromRGB(30, 43, 65)
+top.BorderSizePixel = 0
+top.Parent = main
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 10)
+topCorner.Parent = top
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -45, 1, 0)
+title.Position = UDim2.fromOffset(12, 0)
+title.BackgroundTransparency = 1
+title.Text = "NOTSEAL SCOPE MENU"
+title.TextColor3 = Color3.fromRGB(190, 225, 255)
+title.TextSize = 13
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = top
+
+-- MINIMIZE
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(30, 28)
+minimize.Position = UDim2.new(1, -35, 0, 5)
+minimize.BackgroundColor3 = Color3.fromRGB(55, 75, 105)
+minimize.Text = "-"
+minimize.TextColor3 = Color3.new(1, 1, 1)
+minimize.TextSize = 20
+minimize.Font = Enum.Font.GothamBold
+minimize.Parent = top
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 6)
+minCorner.Parent = minimize
+
+-- FLOATING BUTTON
+
+local floating = Instance.new("TextButton")
+floating.Name = "NotSealFloatingButton"
+floating.Size = UDim2.fromOffset(90, 32)
+floating.Position = UDim2.new(0, 20, 0.5, -16)
+floating.BackgroundColor3 = Color3.fromRGB(30, 43, 65)
+floating.Text = "NOTSEAL"
+floating.TextColor3 = Color3.fromRGB(190, 225, 255)
+floating.TextSize = 12
+floating.Font = Enum.Font.GothamBold
+floating.Visible = false
+floating.Parent = gui
+
+local floatingCorner = Instance.new("UICorner")
+floatingCorner.CornerRadius = UDim.new(0, 9)
+floatingCorner.Parent = floating
+
+local floatingStroke = Instance.new("UIStroke")
+floatingStroke.Color = Color3.fromRGB(135, 206, 250)
+floatingStroke.Thickness = 1.5
+floatingStroke.Parent = floating
+
+-- SECTION
+
+local section = Instance.new("TextLabel")
+section.Size = UDim2.new(1, -20, 0, 22)
+section.Position = UDim2.fromOffset(10, 45)
+section.BackgroundTransparency = 1
+section.Text = "SCOPE DESIGNS"
+section.TextColor3 = Color3.fromRGB(160, 190, 220)
+section.TextSize = 11
+section.Font = Enum.Font.GothamBold
+section.TextXAlignment = Enum.TextXAlignment.Left
+section.Parent = main
+
+-- SCROLLING LIST
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Name = "DesignList"
+scroll.Size = UDim2.new(1, -20, 0, 175)
+scroll.Position = UDim2.fromOffset(10, 73)
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 2
+scroll.ScrollBarImageColor3 = Color3.fromRGB(135, 206, 250)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.Parent = main
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 6)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Parent = scroll
+
+-- STATUS
+
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, -20, 0, 25)
+status.Position = UDim2.new(0, 10, 1, -35)
+status.BackgroundTransparency = 1
+status.Text = "Selected: " .. selectedDesign
+status.TextColor3 = Color3.fromRGB(155, 190, 220)
+status.TextSize = 10
+status.Font = Enum.Font.Gotham
+status.Parent = main
+
+-- DESIGN BUTTONS
+
+local designButtons = {}
+
+local function createDesignButton(name, order)
+local button = Instance.new("TextButton")
+button.Name = name
+button.Size = UDim2.new(1, -6, 0, 32)
+button.BackgroundColor3 = Color3.fromRGB(39, 53, 76)
+button.Text = name
+button.TextColor3 = Color3.fromRGB(225, 240, 255)
+button.TextSize = 11
+button.Font = Enum.Font.GothamBold
+button.LayoutOrder = order
+button.Parent = scroll
+
+local buttonCorner = Instance.new("UICorner")  
+buttonCorner.CornerRadius = UDim.new(0, 7)  
+buttonCorner.Parent = button  
+
+designButtons[name] = button  
+
+button.MouseButton1Click:Connect(function()  
+    selectedDesign = name  
+
+    applyAll()  
+
+    status.Text = "Selected: " .. selectedDesign  
+
+    for designName, designButton in pairs(designButtons) do  
+        designButton.BackgroundColor3 =  
+            designName == selectedDesign  
+            and Color3.fromRGB(75, 125, 170)  
+            or Color3.fromRGB(39, 53, 76)  
+    end  
+end)
+
+end
+
+local order = 0
+
+for name in pairs(DESIGNS) do
+order += 1
+createDesignButton(name, order)
+end
+
+-- SET INITIAL SELECTION
+
+if designButtons[selectedDesign] then
+designButtons[selectedDesign].BackgroundColor3 = Color3.fromRGB(75, 125, 170)
+end
+
+-- MINIMIZE / RESTORE
+
+local function setMinimized(value)
+main.Visible = not value
+floating.Visible = value
+end
+
+minimize.MouseButton1Click:Connect(function()
+setMinimized(true)
+end)
+
+floating.MouseButton1Click:Connect(function()
+setMinimized(false)
+end)
+
+-- DRAG SYSTEM
+
+local function makeDraggable(handle, target)
+local dragging = false
+local dragStart
+local startPosition
+local dragInput
+
+handle.InputBegan:Connect(function(input)  
+    if input.UserInputType == Enum.UserInputType.MouseButton1  
+        or input.UserInputType == Enum.UserInputType.Touch then  
+
+        dragging = true  
+        dragStart = input.Position  
+        startPosition = target.Position  
+        dragInput = input  
+    end  
+end)  
+
+UserInputService.InputChanged:Connect(function(input)  
+    if dragging and (  
+        input.UserInputType == Enum.UserInputType.MouseMovement  
+        or input.UserInputType == Enum.UserInputType.Touch  
+    ) then  
+
+        local delta = input.Position - dragStart  
+
+        target.Position = UDim2.new(  
+            startPosition.X.Scale,  
+            startPosition.X.Offset + delta.X,  
+            startPosition.Y.Scale,  
+            startPosition.Y.Offset + delta.Y  
+        )  
+    end  
+end)  
+
+UserInputService.InputEnded:Connect(function(input)  
+    if input == dragInput  
+        or input.UserInputType == Enum.UserInputType.MouseButton1 then  
+        dragging = false  
+    end  
+end)
+
+end
+
+makeDraggable(top, main)
+makeDraggable(floating, floating)
+
+-- WATCH TOOLS & EFFECTS
+
+local function watchContainer(container)
+container.ChildAdded:Connect(function(object)
+if object:IsA("Tool") and object.Name == "Gun" then
+task.wait(0.2)
+updateTextures(object)
+applyBeamColor(object)
+elseif object:IsA("Beam") or object:IsA("Trail") then
+applyBeamAndTrailToObject(object, DESIGNS[selectedDesign])
+end
+end)
+
+container.DescendantAdded:Connect(function(object)  
+    if object:IsA("Beam") or object:IsA("Trail") then  
+        applyBeamAndTrailToObject(object, DESIGNS[selectedDesign])  
+    end  
+end)
+
+end
+
+local backpack = player:WaitForChild("Backpack")
+watchContainer(backpack)
+
+player.CharacterAdded:Connect(function(character)
+watchContainer(character)
+task.wait(0.5)
+applyAll()
+end)
+
+if player.Character then
+watchContainer(player.Character)
+end
+
+-- WATCH GUN DISPLAY & WORKSPACE BEAMS/TRAILS
+
+workspace.DescendantAdded:Connect(function(object)
+if object.Name == "GunDisplay" then
+task.wait(0.2)
+applyScope()
+elseif object:IsA("Beam") or object:IsA("Trail") then
+local char = player.Character
+local hrp = char and char:FindFirstChild("HumanoidRootPart")
+if char and object:IsDescendantOf(char) then
+applyBeamAndTrailToObject(object, DESIGNS[selectedDesign])
+elseif hrp then
+local pos = getObjectPosition(object)
+if pos and (pos - hrp.Position).Magnitude <= 35 then
+applyBeamAndTrailToObject(object, DESIGNS[selectedDesign])
+end
+end
+end
+end)
+
+-- LOAD
+
+applyAll()
+
+print("[NotSeal] Scope Menu Loaded.")
