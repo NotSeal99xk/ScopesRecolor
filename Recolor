@@ -6,96 +6,150 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
+local WHITE = Color3.fromRGB(255, 255, 255)
+local CYAN = Color3.fromRGB(135, 206, 250)
 
 -- DESIGNS
 
 local DESIGNS = {
     ["ROSESCOPE"] = {
         Texture = "rbxassetid://109232785673400",
-        Color = Color3.fromRGB(255, 182, 193),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(255, 182, 193)
     },
 
     ["CYANSCOPE"] = {
         Texture = "rbxassetid://120031867841417",
-        Color = Color3.fromRGB(135, 206, 250),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = CYAN
     },
 
     ["CHIIKAWA SCOPE"] = {
         Texture = "rbxassetid://133755750227495",
-        Color = Color3.fromRGB(255, 250, 180),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(255, 250, 180)
     },
 
     ["SEALSCOPE"] = {
         Texture = "rbxassetid://77310924197874",
-        Color = Color3.fromRGB(255, 255, 255),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = WHITE
     },
 
     ["CINNAMOROL SCOPE"] = {
         Texture = "rbxassetid://126368120695023",
-        Color = Color3.fromRGB(173, 216, 255),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(173, 216, 255)
     },
 
     ["KITTYSCOPE"] = {
         Texture = "rbxassetid://79617542261475",
-        Color = Color3.fromRGB(255, 190, 210),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(255, 190, 210)
     },
 
     ["YUMEKOSCOPE"] = {
         Texture = "rbxassetid://115478117723404",
-        Color = Color3.fromRGB(255, 0, 0),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(255, 0, 0)
     },
 
     ["GINGERBREAD SCOPE"] = {
         Texture = "rbxassetid://131697622267133",
-        Color = Color3.fromRGB(255, 145, 40),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(255, 145, 40)
     },
 
     ["KUROMISCOPE"] = {
         Texture = "rbxassetid://75047836866332",
-        Color = Color3.fromRGB(200, 170, 235),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(200, 170, 235)
     },
 
     ["PUSHEENSCOPE"] = {
         Texture = "rbxassetid://87998483455762",
-        Color = Color3.fromRGB(255, 255, 255),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = WHITE
     },
 
     ["POMPOMPURIN SCOPE"] = {
         Texture = "rbxassetid://70911625583625",
-        Color = Color3.fromRGB(255, 230, 140),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(255, 230, 140)
     },
 
     ["KANISCOPE"] = {
         Texture = "rbxassetid://109889365749570",
-        Color = Color3.fromRGB(255, 190, 205),
-        BeamTexture = nil,
-        TrailTexture = nil
+        Color = Color3.fromRGB(255, 190, 205)
+    },
+
+    ["ICESCOPE"] = {
+        Texture = "rbxassetid://125150030587610",
+        Color = WHITE
+    },
+
+    ["Mikuscope"] = {
+        Texture = "rbxassetid://92361791735369",
+        Color = CYAN
+    },
+
+    ["ConstellationScope"] = {
+        Texture = "rbxassetid://138564944089568",
+        Color = Color3.fromRGB(255, 220, 60)
+    },
+
+    ["RainbowDashScope"] = {
+        Texture = "rbxassetid://90408441458661",
+        Color = Color3.fromRGB(173, 216, 255)
+    },
+
+    ["StrawberryScope"] = {
+        Texture = "rbxassetid://72282201239392",
+        Color = Color3.fromRGB(255, 150, 160)
+    },
+
+    ["BlueberryScope"] = {
+        Texture = "rbxassetid://115220307848048",
+        Color = Color3.fromRGB(0, 65, 255)
+    },
+
+    ["FluttershyScope"] = {
+        Texture = "rbxassetid://131101447632353",
+        Color = Color3.fromRGB(255, 245, 170)
+    },
+
+    ["Kuromi Piercer"] = {
+        Texture = "rbxassetid://81216803639681",
+        Color = WHITE
     }
 }
 
 local selectedDesign = "CYANSCOPE"
+
+-- CATEGORIES
+
+local CATEGORIES = {
+    {
+        Name = "SCOPE DESIGNS",
+        Designs = {
+            "ROSESCOPE",
+            "CYANSCOPE",
+            "CHIIKAWA SCOPE",
+            "SEALSCOPE",
+            "CINNAMOROL SCOPE",
+            "KITTYSCOPE",
+            "YUMEKOSCOPE",
+            "GINGERBREAD SCOPE",
+            "KUROMISCOPE",
+            "PUSHEENSCOPE",
+            "POMPOMPURIN SCOPE",
+            "KANISCOPE",
+            "ICESCOPE",
+            "Mikuscope",
+            "ConstellationScope",
+            "RainbowDashScope",
+            "StrawberryScope",
+            "BlueberryScope",
+            "FluttershyScope"
+        }
+    },
+
+    {
+        Name = "Icepiercer",
+        Designs = {
+            "Kuromi Piercer"
+        }
+    }
+}
 
 -- ORIGINAL PROPERTY CACHE
 
@@ -127,20 +181,18 @@ local function updateTextures(root)
     local design = selectedDesign and DESIGNS[selectedDesign]
     if not design or not root then return end
 
-    local texture = design.Texture
-
     local function update(object)
         if object:IsA("MeshPart") then
             cacheScopeProperty(object, "TextureID")
-            object.TextureID = texture
+            object.TextureID = design.Texture
 
         elseif object:IsA("SpecialMesh") then
             cacheScopeProperty(object, "TextureId")
-            object.TextureId = texture
+            object.TextureId = design.Texture
 
         elseif object:IsA("Decal") or object:IsA("Texture") then
             cacheScopeProperty(object, "Texture")
-            object.Texture = texture
+            object.Texture = design.Texture
         end
     end
 
@@ -299,7 +351,12 @@ local function restoreOriginalTextures()
     end
 end
 
--- GUI
+-- GUI SETUP
+
+local oldGui = player.PlayerGui:FindFirstChild("NotSealScopeMenu")
+if oldGui then
+    oldGui:Destroy()
+end
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "NotSealScopeMenu"
@@ -310,8 +367,8 @@ gui.Parent = player:WaitForChild("PlayerGui")
 
 local main = Instance.new("Frame")
 main.Name = "Main"
-main.Size = UDim2.fromOffset(235, 290)
-main.Position = UDim2.new(0.5, -117, 0.5, -145)
+main.Size = UDim2.fromOffset(255, 370)
+main.Position = UDim2.new(0.5, -127, 0.5, -185)
 main.BackgroundColor3 = Color3.fromRGB(20, 25, 39)
 main.BorderSizePixel = 0
 main.Parent = gui
@@ -321,7 +378,7 @@ corner.CornerRadius = UDim.new(0, 10)
 corner.Parent = main
 
 local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(135, 206, 250)
+stroke.Color = CYAN
 stroke.Thickness = 1.5
 stroke.Parent = main
 
@@ -348,14 +405,14 @@ title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = top
 
--- MINIMIZE
+-- MINIMIZE BUTTON
 
 local minimize = Instance.new("TextButton")
 minimize.Size = UDim2.fromOffset(30, 28)
 minimize.Position = UDim2.new(1, -35, 0, 5)
 minimize.BackgroundColor3 = Color3.fromRGB(55, 75, 105)
 minimize.Text = "-"
-minimize.TextColor3 = Color3.new(1, 1, 1)
+minimize.TextColor3 = WHITE
 minimize.TextSize = 20
 minimize.Font = Enum.Font.GothamBold
 minimize.Parent = top
@@ -383,17 +440,17 @@ floatingCorner.CornerRadius = UDim.new(0, 9)
 floatingCorner.Parent = floating
 
 local floatingStroke = Instance.new("UIStroke")
-floatingStroke.Color = Color3.fromRGB(135, 206, 250)
+floatingStroke.Color = CYAN
 floatingStroke.Thickness = 1.5
 floatingStroke.Parent = floating
 
--- SECTION
+-- SECTION LABEL
 
 local section = Instance.new("TextLabel")
 section.Size = UDim2.new(1, -20, 0, 22)
 section.Position = UDim2.fromOffset(10, 45)
 section.BackgroundTransparency = 1
-section.Text = "SCOPE DESIGNS"
+section.Text = "DESIGN CATEGORIES"
 section.TextColor3 = Color3.fromRGB(160, 190, 220)
 section.TextSize = 11
 section.Font = Enum.Font.GothamBold
@@ -404,12 +461,12 @@ section.Parent = main
 
 local scroll = Instance.new("ScrollingFrame")
 scroll.Name = "DesignList"
-scroll.Size = UDim2.new(1, -20, 0, 175)
+scroll.Size = UDim2.new(1, -20, 0, 245)
 scroll.Position = UDim2.fromOffset(10, 73)
 scroll.BackgroundTransparency = 1
 scroll.BorderSizePixel = 0
-scroll.ScrollBarThickness = 2
-scroll.ScrollBarImageColor3 = Color3.fromRGB(135, 206, 250)
+scroll.ScrollBarThickness = 3
+scroll.ScrollBarImageColor3 = CYAN
 scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 scroll.Parent = main
@@ -444,21 +501,63 @@ local function updateButtonColors()
     end
 end
 
-local function createDesignButton(name, order)
+local function createCategoryHeader(name, order)
+    local header = Instance.new("TextLabel")
+    header.Name = name .. "Category"
+    header.Size = UDim2.new(1, -6, 0, 25)
+    header.BackgroundColor3 = Color3.fromRGB(30, 43, 65)
+    header.BorderSizePixel = 0
+    header.Text = "  " .. name
+    header.TextColor3 = Color3.fromRGB(190, 225, 255)
+    header.TextSize = 11
+    header.Font = Enum.Font.GothamBold
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.LayoutOrder = order
+    header.Parent = scroll
+
+    local headerCorner = Instance.new("UICorner")
+    headerCorner.CornerRadius = UDim.new(0, 6)
+    headerCorner.Parent = header
+end
+
+local function createDesignButton(name, design, order)
     local button = Instance.new("TextButton")
     button.Name = name
-    button.Size = UDim2.new(1, -6, 0, 32)
+    button.Size = UDim2.new(1, -6, 0, 48)
     button.BackgroundColor3 = Color3.fromRGB(39, 53, 76)
-    button.Text = name
-    button.TextColor3 = Color3.fromRGB(225, 240, 255)
-    button.TextSize = 11
-    button.Font = Enum.Font.GothamBold
+    button.Text = ""
+    button.AutoButtonColor = true
     button.LayoutOrder = order
     button.Parent = scroll
 
     local buttonCorner = Instance.new("UICorner")
     buttonCorner.CornerRadius = UDim.new(0, 7)
     buttonCorner.Parent = button
+
+    local preview = Instance.new("ImageLabel")
+    preview.Name = "Preview"
+    preview.Size = UDim2.fromOffset(58, 38)
+    preview.Position = UDim2.fromOffset(6, 5)
+    preview.BackgroundColor3 = Color3.fromRGB(24, 31, 46)
+    preview.BorderSizePixel = 0
+    preview.Image = design.Texture
+    preview.ScaleType = Enum.ScaleType.Fit
+    preview.Parent = button
+
+    local previewCorner = Instance.new("UICorner")
+    previewCorner.CornerRadius = UDim.new(0, 5)
+    previewCorner.Parent = preview
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, -78, 1, 0)
+    nameLabel.Position = UDim2.fromOffset(74, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = name
+    nameLabel.TextColor3 = Color3.fromRGB(225, 240, 255)
+    nameLabel.TextSize = 11
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.Parent = button
 
     designButtons[name] = button
 
@@ -472,24 +571,35 @@ local function createDesignButton(name, order)
     end)
 end
 
+-- CREATE CATEGORIES
+
 local order = 0
 
-for name in pairs(DESIGNS) do
+for _, category in ipairs(CATEGORIES) do
     order += 1
-    createDesignButton(name, order)
+    createCategoryHeader(category.Name, order)
+
+    for _, designName in ipairs(category.Designs) do
+        order += 1
+        createDesignButton(
+            designName,
+            DESIGNS[designName],
+            order
+        )
+    end
 end
 
 -- RESET BUTTON
 
 local resetButton = Instance.new("TextButton")
 resetButton.Name = "Reset"
-resetButton.Size = UDim2.new(1, -6, 0, 32)
+resetButton.Size = UDim2.new(1, -6, 0, 38)
 resetButton.BackgroundColor3 = Color3.fromRGB(80, 55, 65)
 resetButton.Text = "RESET"
 resetButton.TextColor3 = Color3.fromRGB(255, 220, 225)
 resetButton.TextSize = 11
 resetButton.Font = Enum.Font.GothamBold
-resetButton.LayoutOrder = 100
+resetButton.LayoutOrder = 999
 resetButton.Parent = scroll
 
 local resetCorner = Instance.new("UICorner")
@@ -504,8 +614,6 @@ resetButton.MouseButton1Click:Connect(function()
     status.Text = "Selected: RESET"
     updateButtonColors()
 end)
-
--- INITIAL SELECTION
 
 updateButtonColors()
 
@@ -614,7 +722,7 @@ if player.Character then
     watchContainer(player.Character)
 end
 
--- WATCH GUN DISPLAY & WORKSPACE BEAMS/TRAILS
+-- WATCH WORKSPACE
 
 workspace.DescendantAdded:Connect(function(object)
     if object.Name == "GunDisplay" then
@@ -623,23 +731,12 @@ workspace.DescendantAdded:Connect(function(object)
 
     elseif object:IsA("Beam") or object:IsA("Trail") then
         local char = player.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
         if char and object:IsDescendantOf(char) then
             applyBeamAndTrailToObject(
                 object,
                 selectedDesign and DESIGNS[selectedDesign]
             )
-
-        elseif hrp then
-            local pos = getObjectPosition(object)
-
-            if pos and (pos - hrp.Position).Magnitude <= 35 then
-                applyBeamAndTrailToObject(
-                    object,
-                    selectedDesign and DESIGNS[selectedDesign]
-                )
-            end
         end
     end
 end)
